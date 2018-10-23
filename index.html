@@ -10,6 +10,8 @@
         #mainContent h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
         #mainContent p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
         #mainContent a { display: inline-block; text-align: center; text-decoration: none; padding: 8px; border-radius: 4px; font-size: 20px; color:black;}
+        #mainContent a:hover { text-decoration: underline; }
+        #mainContent a:visited { color: #555555; }
         #mainContent { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
         #logo { width:50%;  }
 	@media (max-width: 600px) {
@@ -48,10 +50,10 @@
       <a class="github-button" href="https://github.com/RaidAndFade" data-size="large" data-show-count="true" aria-label="Follow @RaidAndFade on GitHub">Follow @RaidAndFade</a>
       <!-- Fork Repo. -->
       &nbsp;
-      <span id="friends"><a class="github-button" href="https://github.com/RaidAndFade/Hacktoberfest2018/blob/master/README.md" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Add yourself to the list of friends!">Join the list!</a></span>
+      <span id="friends"><a class="github-button" href="https://github.com/RaidAndFade/HacktoberChallenges/blob/master/README.md" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Add yourself to the list of friends!">Join the list!</a></span>
     </div>
     <hr>
-    <button id="flistbtn" onclick="changelist('Friends','flist')">Friends List</button><button id="glistbtn" onclick="changelist('Games','glist')">Games List</button><br><br>
+    <button id="flistbtn" onclick="changelist('Friends','flist')">Friends List</button><button id="glistbtn" onclick="changelist('Games','glist')">Games List</button><button id="blistbtn" onclick="changelist('BSoD','blist')">BSoD List</button><br><br>
     <select id="c" onchange="page(0)">
       <option value="10">Show 10 per page</option>
       <option value="25" selected>Show 25 per page</option>
@@ -121,6 +123,10 @@ function getperpage(){
   return document.getElementById("c").value-(-0);
 }
 
+function setperpage(i){
+  document.getElementById("c").value = -(-i)
+}
+
 // the url of the folder, and the local storage element name
 function changelist(URL,LSName){
   curlist = LSName;
@@ -128,7 +134,7 @@ function changelist(URL,LSName){
   isCacheExpired = localStorage.getItem(curlist+"time") == null || (epochSecs()-localStorage.getItem(curlist+"time"))>cacheexpirysecs
   if(localStorage.getItem(curlist) == null || isCacheExpired){
     document.getElementById("d").innerHTML = "<li>Loading "+URL+"...</li>"
-    const gitapiurl = "https://api.github.com/repos/raidandfade/hacktoberfest2018/contents/"+curURL;
+    const gitapiurl = "https://api.github.com/repos/raidandfade/hacktoberchallenges/contents/"+curURL;
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
@@ -154,13 +160,44 @@ var curpage = 0;
 function page(i){
   l = JSON.parse(localStorage.getItem(curlist))
   numpages = Math.ceil(l.length/getperpage())
-  curpage+=i
+  curpage += i
+  if(curpage < 0)
+    curpage = 0
   if(curpage > numpages)
     curpage = numpages-1
   document.getElementById("pgbtnprv").disabled = curpage == 0
   document.getElementById("pgbtnnxt").disabled = curpage == (numpages-1)
   curcount = curpage*getperpage()
+  window.location.hash = "#"+curlist+"_"+getperpage()+"_"+curpage
   setList(l,curURL,curpage*getperpage(),getperpage())
 }
-changelist("Friends","flist")
+
+var h = window.location.hash
+tagname = h.split("_",1)[0]
+if(tagname=="#glist"){
+  curlist = "glist"
+  curURL = "Games"
+}else if(tagname=="#blist"){
+  curlist = "blist"
+  curURL = "BSoD"
+}else{
+  curlist = "flist"
+  curURL = "Friends"
+}
+validhash = false
+if(h!=""){
+  hl = h.split("_",3)
+  if(hl.length==3){
+    pc = hl[1]
+    pn = hl[2]
+    if(!isNaN(pn) && !isNaN(pc)){
+      setperpage(-(-pc))
+      page(-(-pn))
+      validhash = true
+    }
+  }
+}
+if(!validhash){
+  page(0)
+}
 </script>
